@@ -1,1 +1,69 @@
-import streamlit as st import os from dotenv import load_dotenv from mistralai import Mistral from openai import OpenAI  load_dotenv() DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY") MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")  def obtener_mensaje_sistema(tipo_contenido):         roles = {                 "Generar código(programación)": "Eres solo un experto en programación, si te preguntan algo que no sea programación menciona que no puedes responder por tu configuración",                 "Poeta": "Eres solo un poeta creativo y expresivo, si te preguntan algo que no sea sobre poemas menciona que no puedes responder por tu configuración",                 "Profesor de derecho": "Eres solo un profesor de derecho con amplio conocimiento en jurisprudencia, si te preguntan algo que no sea de derecho menciona que no puedes responder por tu configuración",                 "Creador de post para redes sociales": "Eres solo un experto en marketing digital y creación de contenido atractivo para redes sociales, si te preguntan algo que no sea de redes sociales menciona que no puedes responder por tu configuración"         }         return roles.get(tipo_contenido)  def generar_texto(prompt, modelo, tipo_contenido, temperatura):         system_message = obtener_mensaje_sistema(tipo_contenido)         try:                 if modelo == "deepseek":                         if not DEEPSEEK_API_KEY:                                 return st.error("Error: Falta el api key de DeepSeek")                      client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")                         response = client.chat.completions.create(                                 model="deepseek-chat",                                 messages=[                                         {"role": "system", "content": system_message},                                         {"role": "user", "content": prompt},                                 ],                                 temperature=temperatura,                  stream=False                         )                         return response.choices[0].message.content.strip()                          elif modelo == "mistral":                         if not MISTRAL_API_KEY:                                 return st.error("Error: Falta el api key de Mistral")                        client = Mistral(api_key=MISTRAL_API_KEY)                         chat_response = client.chat.complete(                                 model="mistral-large-latest",                                 messages=[                                         {"role": "system", "content": system_message},                                         {"role": "user", "content": prompt},                                 ],                                 temperature=temperatura              )                         return chat_response.choices[0].message.content                                  return st.error('Error: Modelo no válido')    except Exception:                 return st.error('El API en estos momentos no está disponible.')  st.title("Asistente de Generación de Contenido Especializado") modelo = st.radio("Selecciona el modelo de IA para generar", ["deepseek", "mistral"]) temperatura = st.slider("Seleccione la temperatura del modelo", 0.0, 1.0, 0.7, 0.1)  opcion = st.selectbox("Selecciona el tipo de contenido especializado", ["Generar código(programación)", "Poeta", "Profesor de derecho", "Creador de post para redes sociales"]) prompt = st.text_area("Ingresa tu descripción o prompt") if st.button("Generar"):         if prompt.strip():                 resultado = generar_texto(prompt, modelo, opcion, temperatura)                 st.write("### Resultado:")                 st.write(resultado)                 st.balloons()         else:                 st.warning("Por favor, ingresa un prompt válido.")  
+import streamlit as st 
+import os 
+from dotenv import load_dotenv 
+from mistralai import Mistral 
+from openai import OpenAI  
+
+load_dotenv() 
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY") 
+MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")  
+
+def obtener_mensaje_sistema(tipo_contenido):     
+    roles = {         
+        "Generar código(programación)": "Eres solo un experto en programación, si te preguntan algo que no sea programación menciona que no puedes responder por tu configuración",         
+        "Poeta": "Eres solo un poeta creativo y expresivo, si te preguntan algo que no sea sobre poemas menciona que no puedes responder por tu configuración",         
+        "Profesor de derecho": "Eres solo un profesor de derecho con amplio conocimiento en jurisprudencia, si te preguntan algo que no sea de derecho menciona que no puedes responder por tu configuración",         
+        "Creador de post para redes sociales": "Eres solo un experto en marketing digital y creación de contenido atractivo para redes sociales, si te preguntan algo que no sea de redes sociales menciona que no puedes responder por tu configuración"     
+    }     
+    return roles.get(tipo_contenido)  
+
+def generar_texto(prompt, modelo, tipo_contenido, temperatura):     
+    system_message = obtener_mensaje_sistema(tipo_contenido)     
+    try:         
+        if modelo == "deepseek":             
+            if not DEEPSEEK_API_KEY:                 
+                return st.error("Error: Falta el api key de DeepSeek")          
+            client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")             
+            response = client.chat.completions.create(                 
+                model="deepseek-chat",                 
+                messages=[                     
+                    {"role": "system", "content": system_message},                     
+                    {"role": "user", "content": prompt},                 
+                ],                 
+                temperature=temperatura,  
+                stream=False             
+            )             
+            return response.choices[0].message.content.strip()                  
+
+        elif modelo == "mistral":             
+            if not MISTRAL_API_KEY:                 
+                return st.error("Error: Falta el api key de Mistral")            
+            client = Mistral(api_key=MISTRAL_API_KEY)             
+            chat_response = client.chat.complete(                 
+                model="mistral-large-latest",                 
+                messages=[                     
+                    {"role": "system", "content": system_message},                     
+                    {"role": "user", "content": prompt},                 
+                ],                 
+                temperature=temperatura  
+            )             
+            return chat_response.choices[0].message.content                  
+        
+        return st.error('Error: Modelo no válido')
+    except Exception:         
+        return st.error('El API en estos momentos no está disponible.')  
+
+st.title("Asistente de Generación de Contenido Especializado") 
+modelo = st.radio("Selecciona el modelo de IA para generar", ["deepseek", "mistral"]) 
+temperatura = st.slider("Seleccione la temperatura del modelo", 0.0, 1.0, 0.7, 0.1)  
+opcion = st.selectbox("Selecciona el tipo de contenido especializado", ["Generar código(programación)", "Poeta", "Profesor de derecho", "Creador de post para redes sociales"]) 
+prompt = st.text_area("Ingresa tu descripción o prompt") 
+
+if st.button("Generar"):     
+    if prompt.strip():         
+        resultado = generar_texto(prompt, modelo, opcion, temperatura)         
+        st.write("### Resultado:")         
+        st.write(resultado)         
+        st.balloons()     
+    else:         
+        st.warning("Por favor, ingresa un prompt válido.")  
